@@ -20,7 +20,7 @@ def send_welcome(message):
     buttonCitySpb = types.KeyboardButton('СПб')
     buttonCityMsc = types.KeyboardButton('Москва')
     keyboard.add(buttonCitySpb, buttonCityMsc)
-    m=bot.send_message(message.chat.id, 'Добро пожаловать! Выбери город!', reply_markup=keyboard)
+    m=bot.send_message(message.chat.id, 'Добро пожаловать! Выберите город!', reply_markup=keyboard)
     bot.register_next_step_handler(m, cityReaction)
 
 
@@ -29,20 +29,22 @@ def cityReaction(message):
     global user
     keyboard_hider = types.ReplyKeyboardRemove()
     keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    buttonNext = types.KeyboardButton('Далее')
+    #buttonNext = types.KeyboardButton('Далее')
     if message.text == 'СПб':
         #добавить в бд + current_city
         user.current_city = 'spb'
         bot.send_message(message.chat.id, 'Вы выбрали '+message.text,reply_markup=keyboard_hider)
-        keyboard.add(buttonNext)
-        msg = bot.send_message(message.chat.id, 'Поправки в поиск внесены!', reply_markup=keyboard)
+        msg = Next()
+        #keyboard.add(buttonNext)
+        #msg = bot.send_message(message.chat.id, 'Поправки в поиск внесены!', reply_markup=keyboard)
         bot.register_next_step_handler(msg, button)
     elif message.text == 'Москва':
         #добавить в бд + current_city
         user.current_city = 'msk'
         bot.send_message(message.chat.id, 'Вы выбрали ' + message.text, reply_markup=keyboard_hider)
-        keyboard.add(buttonNext)
-        msg = bot.send_message(message.chat.id, 'Поправки в поиск внесены!', reply_markup=keyboard)
+        msg = Next()
+        #keyboard.add(buttonNext)
+        #msg = bot.send_message(message.chat.id, 'Поправки в поиск внесены!', reply_markup=keyboard)
         bot.register_next_step_handler(msg, button)
     else:
         msg = bot.send_message(message.chat.id, 'Выберите город')
@@ -113,6 +115,7 @@ def eventName(call):
         print('Mes:' + call.data)
         user.current_event = str(call.data)
         print(user.current_event)
+        user.count+=1
         user.addEventClick(user.current_event)
         bot.register_next_step_handler(call.message, setEvent)
     else: bot.register_next_step_handler(call, eventName)
@@ -128,12 +131,14 @@ def setEvent(message):
         bot.register_next_step_handler(m, InterestKeyboard)
 
     elif  message.text=='Рекомендации':
+        bot.send_message(user.chat_id, 'Составляем подборку... это может занять несколько секунд вашего драгоценного времени ^^')
         user.addActRecomendation()
         m = Next()
         bot.register_next_step_handler(m, InterestKeyboard)
-    elif  message.text=='Back to choose city':
-        bot.send_message(message.chat.id,'Выбран back')
-        #bot.register_next_step_handler(message, setEvent)
+    elif  message.text=='Вернуться к выбору города':
+        #bot.send_message(message.chat.id,'')
+        message.text = '/start'
+        send_welcome(message)
 
 
 def setMark(message):
@@ -146,6 +151,7 @@ def setMark(message):
 
         if ((len(user.usersActivity) - 1) == -1):
             bot.send_message(message.chat.id, 'Подборка завершена!')
+            user.addInfoToDB()
             message = Next()
             bot.register_next_step_handler(message, button)
         else:
@@ -162,7 +168,6 @@ def setMark(message):
             InterestKeyboard(message)
     else:
         user.addInfoToDB()
-        user.usersActivity = {}
         message = Next()
         bot.register_next_step_handler(message, button)
 
@@ -185,6 +190,7 @@ def InterestKeyboard(message):
 
     if ((len(user.usersActivity) - 1) == -1):
         bot.send_message(user.chat_id, 'Подборка завершена!')
+        user.addInfoToDB()
         message = Next()
         bot.register_next_step_handler(message, button)
     else:

@@ -17,6 +17,7 @@ class User:
 
     def addEventClick(self, evName):
         if (evName not in self.usersEvents):
+            print(self.chat_id, evName)
             self.usersEvents.update({evName : 1})
         else:
             self.usersEvents[evName]+=1

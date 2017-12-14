@@ -91,11 +91,8 @@ def addEvent(dic):
 
 def addCountPercent(chat_id, count, usersEvents):
     db = connect()
-
+    print('I\'m here')
     cur = db.cursor()
-
-    if(count <= 0):
-        count = 1
 
     for d in usersEvents:
         print(chat_id, d, int((usersEvents[d] / count) * 5))
